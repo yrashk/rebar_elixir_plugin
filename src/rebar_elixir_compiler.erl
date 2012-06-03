@@ -71,27 +71,34 @@ dotex_compile(Config, OutDir) ->
     dotex_compile(Config, OutDir, []).
 
 dotex_compile(Config, OutDir, MoreSources) ->
-    FirstExs = rebar_config:get_list(Config, ex_first_files, []),
-    ExOpts = ex_opts(Config),
-    %% Support the src_dirs option allowing multiple directories to
-    %% contain elixir source. This might be used, for example, should
-    %% eunit tests be separated from the core application source.
-    SrcDirs = src_dirs(proplists:append_values(src_dirs, ExOpts)),
-    RestExs  = [Source || Source <- gather_src(SrcDirs, []) ++ MoreSources,
-                           not lists:member(Source, FirstExs)],
-
-    NewFirstExs = FirstExs,
-
-    %% Make sure that ebin/ exists and is on the path
-    ok = filelib:ensure_dir(filename:join("ebin", "dummy.beam")),
-    CurrPath = code:get_path(),
-    true = code:add_path(filename:absname("ebin")),
-    rebar_base_compiler:run(Config, NewFirstExs, RestExs,
-                            fun(S, C) ->
-                                    internal_ex_compile(S, C, OutDir, ExOpts)
-                            end),
-    true = code:set_path(CurrPath),
-    ok.
+    case application:load(elixir) of
+        ok ->
+            application:start(elixir),
+            FirstExs = rebar_config:get_list(Config, ex_first_files, []),
+            ExOpts = ex_opts(Config),
+            %% Support the src_dirs option allowing multiple directories to
+            %% contain elixir source. This might be used, for example, should
+            %% eunit tests be separated from the core application source.
+            SrcDirs = src_dirs(proplists:append_values(src_dirs, ExOpts)),
+            RestExs  = [Source || Source <- gather_src(SrcDirs, []) ++ MoreSources,
+                                  not lists:member(Source, FirstExs)],
+            
+            NewFirstExs = FirstExs,
+            
+            %% Make sure that ebin/ exists and is on the path
+            ok = filelib:ensure_dir(filename:join("ebin", "dummy.beam")),
+            CurrPath = code:get_path(),
+            true = code:add_path(filename:absname("ebin")),
+            rebar_base_compiler:run(Config, NewFirstExs, RestExs,
+                                    fun(S, C) ->
+                                            internal_ex_compile(S, C, OutDir, ExOpts)
+                                    end),
+            true = code:set_path(CurrPath),
+            application:stop(elixir),
+            ok;
+        _ ->
+            rebar_log:log(info, "No Elixir compiler found", [])
+    end.
 
 
 %% ===================================================================
@@ -106,19 +113,13 @@ ex_opts(Config) ->
                            Outdir::file:filename(),
                            ExOpts::list()) -> 'ok' | 'skipped'.
 internal_ex_compile(Source, _Config, Outdir, ExOpts) ->
-    case code:ensure_loaded(elixir_compiler) of
-        {module, elixir_compiler} -> 
-            '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
-            try
-                elixir_compiler:file_to_path(Source, Outdir),
-                ok
-            catch _:Reason ->
-                    rebar_log:log(error, "Elixir compiler failed with ~p",[Reason]),
-                    throw({error, failed})
-            end;
-        _ ->
-            rebar_log:log(warn, "No Elixir compiler found", []),
-            ok
+    '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
+    try
+        elixir_compiler:file_to_path(Source, Outdir),
+        ok
+    catch _:Reason ->
+            rebar_log:log(error, "Elixir compiler failed with ~p",[Reason]),
+            throw({error, failed})
     end.
 
 gather_src([], Srcs) ->
