@@ -86,13 +86,13 @@ dotex_compile(Config, OutDir, MoreSources) ->
             NewFirstExs = FirstExs,
             
             %% Make sure that ebin/ exists and is on the path
-            ok = filelib:ensure_dir(filename:join("ebin", "dummy.beam")),
+            ok = filelib:ensure_dir(filename:join(OutDir, "dummy.beam")),
             CurrPath = code:get_path(),
-            true = code:add_path(filename:absname("ebin")),
-            rebar_base_compiler:run(Config, NewFirstExs, RestExs,
-                                    fun(S, C) ->
-                                            internal_ex_compile(S, C, OutDir, ExOpts)
-                                    end),
+            true = code:add_path(filename:absname(OutDir)),
+
+            '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
+            '__MAIN__.Elixir.ParallelCompiler':files_to_path(NewFirstExs ++ RestExs, OutDir),
+
             true = code:set_path(CurrPath),
             application:stop(elixir),
             ok;
@@ -107,20 +107,6 @@ dotex_compile(Config, OutDir, MoreSources) ->
 
 ex_opts(Config) ->
     rebar_config:get(Config, ex_opts, [{ignore_module_conflict, true}]).
-
--spec internal_ex_compile(Source::file:filename(),
-                           Config::rebar_config:config(),
-                           Outdir::file:filename(),
-                           ExOpts::list()) -> 'ok' | 'skipped'.
-internal_ex_compile(Source, _Config, Outdir, ExOpts) ->
-    '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
-    try
-        elixir_compiler:file_to_path(Source, Outdir),
-        ok
-    catch _:{'__MAIN__.CompileError',_, Reason,File,Line} ->
-            rebar_log:log(error, "Elixir compiler failed with:~n  ~s in ~s:~w~n",[Reason,File,Line]),
-            throw({error, failed})
-    end.
 
 gather_src([], Srcs) ->
     Srcs;
