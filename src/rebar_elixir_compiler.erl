@@ -118,7 +118,7 @@ internal_ex_compile(Source, _Config, Outdir, ExOpts) ->
         elixir_compiler:file_to_path(Source, Outdir),
         ok
     catch _:{'__MAIN__.CompileError',_, Reason,File,Line} ->
-            rebar_log:log(error, "Elixir compiler failed with ~s in ~s:~w~n",[Reason,File,Line]),
+            rebar_log:log(error, "Elixir compiler failed with:  ~s in ~s:~w~n",[Reason,File,Line]),
             throw({error, failed})
     end.
 
