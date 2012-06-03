@@ -26,7 +26,7 @@
 %% -------------------------------------------------------------------
 -module(rebar_elixir_compiler).
 
--export([compile/2,
+-export([pre_compile/2,
          clean/2,
          pre_eunit/2]).
 
@@ -45,10 +45,9 @@
 %%                 For example, {elixir_opts, [{ignore_module_conflict, false}]}
 %%
 
--spec compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
-compile(Config, AppFile) ->
-    dotex_compile(Config, "ebin"),
-    rebar_otp_app:compile(Config, AppFile).
+-spec pre_compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
+pre_compile(Config, _AppFile) ->
+    dotex_compile(Config, "ebin").
 
 -spec clean(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
 clean(_Config, _AppFile) ->
