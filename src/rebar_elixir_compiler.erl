@@ -42,7 +42,7 @@
 %% * ex_first_files - First elixir files to compile
 %% * elixir_opts - Erlang list of elixir compiler options
 %%                 
-%%                 For example, {elixir_opts, [{ignore_module_conflict, true}]}
+%%                 For example, {elixir_opts, [{ignore_module_conflict, false}]}
 %%
 
 -spec compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
@@ -99,7 +99,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
 %% ===================================================================
 
 ex_opts(Config) ->
-    rebar_config:get(Config, ex_opts, []).
+    rebar_config:get(Config, ex_opts, [{ignore_module_conflict, true}]).
 
 -spec internal_ex_compile(Source::file:filename(),
                            Config::rebar_config:config(),
