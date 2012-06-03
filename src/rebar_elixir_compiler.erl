@@ -94,7 +94,6 @@ dotex_compile(Config, OutDir, MoreSources) ->
             '__MAIN__.Elixir.ParallelCompiler':files_to_path(NewFirstExs ++ RestExs, OutDir),
 
             true = code:set_path(CurrPath),
-            application:stop(elixir),
             ok;
         _ ->
             rebar_log:log(info, "No Elixir compiler found~n", [])
