@@ -46,8 +46,9 @@
 %%
 
 -spec compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
-compile(Config, _AppFile) ->
-    dotex_compile(Config, "ebin").
+compile(Config, AppFile) ->
+    dotex_compile(Config, "ebin"),
+    rebar_otp_app:compile(Config, AppFile).
 
 -spec clean(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
 clean(_Config, _AppFile) ->
