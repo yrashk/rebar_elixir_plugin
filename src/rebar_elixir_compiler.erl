@@ -97,7 +97,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
             application:stop(elixir),
             ok;
         _ ->
-            rebar_log:log(info, "No Elixir compiler found", [])
+            rebar_log:log(info, "No Elixir compiler found~n", [])
     end.
 
 
@@ -117,8 +117,8 @@ internal_ex_compile(Source, _Config, Outdir, ExOpts) ->
     try
         elixir_compiler:file_to_path(Source, Outdir),
         ok
-    catch _:Reason ->
-            rebar_log:log(error, "Elixir compiler failed with ~p",[Reason]),
+    catch _:{'__MAIN__.CompileError',_, Reason,File,Line} ->
+            rebar_log:log(error, "Elixir compiler failed with ~s in ~s:~w~n",[Reason,File,Line]),
             throw({error, failed})
     end.
 
