@@ -1,0 +1,11 @@
+{application, rebar_elixir_plugin,
+ [
+  {description, "rebar plugin for compiling elixir source code"},
+  {vsn, git},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
