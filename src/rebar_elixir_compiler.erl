@@ -105,7 +105,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
             true = code:add_path(filename:absname(OutDir)),
 
             '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
-            '__MAIN__.Elixir.ParallelCompiler':files_to_path(NewFirstExs ++ RestExs, OutDir, fun(F) -> 
+            '__MAIN__.Elixir.ParallelCompiler':files_to_path([ list_to_binary(F) || F <- NewFirstExs ++ RestExs], list_to_binary(OutDir), fun(F) -> 
                   io:format("Compiled ~s~n",[F])
                end),
             true = code:set_path(CurrPath),
