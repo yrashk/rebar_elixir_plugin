@@ -86,8 +86,10 @@ dotex_compile(Config, OutDir) ->
     dotex_compile(Config, OutDir, []).
 
 dotex_compile(Config, OutDir, MoreSources) ->
-    case application:load(elixir) of
-        ok ->
+    App = application:load(elixir),
+    Loaded = (App == ok orelse App == {error, {already_loaded, elixir}}),
+    case Loaded of
+        true ->
             application:start(elixir),
             FirstExs = rebar_config:get_list(Config, ex_first_files, []),
             ExOpts = ex_opts(Config),
@@ -111,7 +113,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
                end),
             true = code:set_path(CurrPath),
             ok;
-        _ ->
+        false ->
             rebar_log:log(info, "No Elixir compiler found~n", [])
     end.
 
