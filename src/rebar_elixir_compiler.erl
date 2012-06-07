@@ -51,6 +51,7 @@ compile(Config, _AppFile) ->
     dotex_compile(Config, "ebin").
 
 -spec post_compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
+post_compile(_, undefined) -> ok;
 post_compile(Config, AppFile) ->
     case rebar_app_utils:is_app_src(AppFile) of
         true ->
