@@ -112,14 +112,24 @@ dotex_compile(Config, OutDir, MoreSources) ->
                 true ->
                     '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
                     Files = [ list_to_binary(F) || F <- Exs],
-                    '__MAIN__.Elixir.ParallelCompiler':
-                        files_to_path(Files,
-                                      list_to_binary(OutDir), 
-                                      fun(F) -> 
-                                              io:format("Compiled ~s~n",[F])
-                                      end),
-                    true = code:set_path(CurrPath),
-                    ok;
+                    try 
+                        '__MAIN__.Elixir.ParallelCompiler':
+                            files_to_path(Files,
+                                          list_to_binary(OutDir), 
+                                          fun(F) -> 
+                                            io:format("Compiled ~s~n",[F])
+                                          end),
+                        true = code:set_path(CurrPath),
+                        ok
+                    catch _:{'__MAIN__.CompileError',
+                             '__exception__',
+                             Reason,
+                             File, Line} ->
+                            file:change_time(binary_to_list(File),
+                                             erlang:localtime()),
+                            io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
+                            throw({error, failed})
+                    end;
                 false ->
                     rebar_log:log(info, "No Elixir files found to compile~n", [])
             end;
