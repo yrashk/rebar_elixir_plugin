@@ -106,13 +106,23 @@ dotex_compile(Config, OutDir, MoreSources) ->
             ok = filelib:ensure_dir(filename:join(OutDir, "dummy.beam")),
             CurrPath = code:get_path(),
             true = code:add_path(filename:absname(OutDir)),
-
-            '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
-            '__MAIN__.Elixir.ParallelCompiler':files_to_path([ list_to_binary(F) || F <- NewFirstExs ++ RestExs], list_to_binary(OutDir), fun(F) -> 
-                  io:format("Compiled ~s~n",[F])
-               end),
-            true = code:set_path(CurrPath),
-            ok;
+            
+            Exs = NewFirstExs ++ RestExs,
+            case is_newer(Exs,filelib:last_modified(OutDir)) of
+                true ->
+                    '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
+                    Files = [ list_to_binary(F) || F <- Exs],
+                    '__MAIN__.Elixir.ParallelCompiler':
+                        files_to_path(Files,
+                                      list_to_binary(OutDir), 
+                                      fun(F) -> 
+                                              io:format("Compiled ~s~n",[F])
+                                      end),
+                    true = code:set_path(CurrPath),
+                    ok;
+                false ->
+                    rebar_log:log(info, "No Elixir files found to compile~n", [])
+            end;
         false ->
             rebar_log:log(info, "No Elixir compiler found~n", [])
     end.
@@ -121,6 +131,10 @@ dotex_compile(Config, OutDir, MoreSources) ->
 %% ===================================================================
 %% Internal functions
 %% ===================================================================
+is_newer(Files, Time) ->
+    lists:any(fun(FileTime) ->
+                      FileTime > Time
+              end, [ filelib:last_modified(File) || File <- Files ]).
 
 ex_opts(Config) ->
     rebar_config:get(Config, ex_opts, [{ignore_module_conflict, true}]).
