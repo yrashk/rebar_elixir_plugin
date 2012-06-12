@@ -100,39 +100,24 @@ dotex_compile(Config, OutDir, MoreSources) ->
             RestExs  = [Source || Source <- gather_src(SrcDirs, []) ++ MoreSources,
                                   not lists:member(Source, FirstExs)],
             
-            NewFirstExs = FirstExs,
-            
             %% Make sure that ebin/ exists and is on the path
-            ok = filelib:ensure_dir(filename:join(OutDir, "dummy.beam")),
+            MainOutDir = filename:join([OutDir, "__MAIN__"]),
+            OutDirExists = filelib:is_dir(MainOutDir),
+
             CurrPath = code:get_path(),
             true = code:add_path(filename:absname(OutDir)),
+
+            EbinDate = 
+            case OutDirExists of
+                true -> filelib:last_modified(MainOutDir);
+                false -> 0
+            end,
+
+            compile(FirstExs, ExOpts, OutDir, EbinDate),
+            compile(RestExs, ExOpts, OutDir, EbinDate),
             
-            Exs = NewFirstExs ++ RestExs,
-            case is_newer(Exs,filelib:last_modified(OutDir)) of
-                true ->
-                    '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
-                    Files = [ list_to_binary(F) || F <- Exs],
-                    try 
-                        '__MAIN__.Elixir.ParallelCompiler':
-                            files_to_path(Files,
-                                          list_to_binary(OutDir), 
-                                          fun(F) -> 
-                                            io:format("Compiled ~s~n",[F])
-                                          end),
-                        true = code:set_path(CurrPath),
-                        ok
-                    catch _:{'__MAIN__.CompileError',
-                             '__exception__',
-                             Reason,
-                             File, Line} ->
-                            file:change_time(binary_to_list(File),
-                                             erlang:localtime()),
-                            io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
-                            throw({error, failed})
-                    end;
-                false ->
-                    rebar_log:log(info, "No Elixir files found to compile~n", [])
-            end;
+            true = code:set_path(CurrPath),
+            ok;
         false ->
             rebar_log:log(info, "No Elixir compiler found~n", [])
     end.
@@ -141,6 +126,30 @@ dotex_compile(Config, OutDir, MoreSources) ->
 %% ===================================================================
 %% Internal functions
 %% ===================================================================
+compile(Exs, ExOpts, OutDir, EbinDate) ->
+    case is_newer(Exs, EbinDate) of
+        true ->
+            '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
+            Files = [ list_to_binary(F) || F <- Exs],
+            try 
+                '__MAIN__.Elixir.ParallelCompiler':
+                    files_to_path(Files,
+                                  list_to_binary(OutDir), 
+                                  fun(F) -> 
+                                          io:format("Compiled ~s~n",[F])
+                                          end),
+                ok
+            catch _:{'__MAIN__.CompileError',
+                     '__exception__',
+                     Reason,
+                     File, Line} ->
+                    file:change_time(OutDir, EbinDate),
+                    io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
+                    throw({error, failed})
+            end;
+        false -> ok
+    end.
+
 is_newer(Files, Time) ->
     lists:any(fun(FileTime) ->
                       FileTime > Time
