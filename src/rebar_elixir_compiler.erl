@@ -138,6 +138,7 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                                   fun(F) -> 
                                           io:format("Compiled ~s~n",[F])
                                           end),
+                file:change_time(filename:join([OutDir,"__MAIN__"]), erlang:localtime()),
                 ok
             catch _:{'__MAIN__.CompileError',
                      '__exception__',
