@@ -66,8 +66,8 @@ ebin_dir() ->
 
 perform_exunit(_Config, Files) ->
     case whereis(exunit_server) of 
-      undefined -> '__MAIN__.ExUnit':start([]);
+      undefined -> '__MAIN__-ExUnit':start([]);
       _ -> ok
     end,
-    [ '__MAIN__.Code':require_file(list_to_binary(File)) || File <- Files ],
-    '__MAIN__.ExUnit':run().
+    [ '__MAIN__-Code':require_file(list_to_binary(File)) || File <- Files ],
+    '__MAIN__-ExUnit':run().

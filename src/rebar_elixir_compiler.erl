@@ -101,15 +101,16 @@ dotex_compile(Config, OutDir, MoreSources) ->
                                   not lists:member(Source, FirstExs)],
             
             %% Make sure that ebin/ exists and is on the path
-            MainOutDir = filename:join([OutDir, "__MAIN__"]),
-            OutDirExists = filelib:is_dir(MainOutDir),
+            OutDirExists = filelib:is_dir(OutDir),
 
             CurrPath = code:get_path(),
             true = code:add_path(filename:absname(OutDir)),
 
-            EbinDate = 
+            EbinDate =
             case OutDirExists of
-                true -> filelib:last_modified(MainOutDir);
+                true -> 
+                    {ok, Files} = file:list_dir(OutDir),
+                    lists:max([ filelib:last_modified(F) || F <- [OutDir|Files] ]);
                 false -> 0
             end,
 
@@ -129,18 +130,18 @@ dotex_compile(Config, OutDir, MoreSources) ->
 compile(Exs, ExOpts, OutDir, EbinDate) ->
     case is_newer(Exs, EbinDate) of
         true ->
-            '__MAIN__.Code':compiler_options(orddict:from_list(ExOpts)),
+            '__MAIN__-Code':compiler_options(orddict:from_list(ExOpts)),
             Files = [ list_to_binary(F) || F <- Exs],
             try 
-                '__MAIN__.Elixir.ParallelCompiler':
+                '__MAIN__-Elixir-ParallelCompiler':
                     files_to_path(Files,
                                   list_to_binary(OutDir), 
                                   fun(F) -> 
                                           io:format("Compiled ~s~n",[F])
                                           end),
-                file:change_time(filename:join([OutDir,"__MAIN__"]), erlang:localtime()),
+                file:change_time(OutDir, erlang:localtime()),
                 ok
-            catch _:{'__MAIN__.CompileError',
+            catch _:{'__MAIN__-CompileError',
                      '__exception__',
                      Reason,
                      File, Line} ->
