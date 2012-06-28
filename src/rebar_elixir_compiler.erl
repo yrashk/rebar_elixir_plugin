@@ -114,7 +114,12 @@ dotex_compile(Config, OutDir, MoreSources) ->
             case OutDirExists of
                 true -> 
                     {ok, Files} = file:list_dir(OutDir),
-                    lists:max([ filelib:last_modified(F) || F <- [OutDir|Files], filename:extension(F) /= ".app" ]);
+                    Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
+                    case Dates of
+                        [] -> 0;
+                        _ ->
+                            lists:max(Dates)
+                    end;
                 false -> 0
             end,
 
