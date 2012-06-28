@@ -104,13 +104,17 @@ dotex_compile(Config, OutDir, MoreSources) ->
             OutDirExists = filelib:is_dir(OutDir),
 
             CurrPath = code:get_path(),
-            true = code:add_path(filename:absname(OutDir)),
+            
+            case OutDirExists of
+                true -> true = code:add_path(filename:absname(OutDir));
+                false -> ok
+            end,
 
             EbinDate =
             case OutDirExists of
                 true -> 
                     {ok, Files} = file:list_dir(OutDir),
-                    lists:max([ filelib:last_modified(F) || F <- [OutDir|Files] ]);
+                    lists:max([ filelib:last_modified(F) || F <- [OutDir|Files], filename:extension(F) /= ".app" ]);
                 false -> 0
             end,
 
