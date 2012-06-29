@@ -154,7 +154,10 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                      '__exception__',
                      Reason,
                      File, Line} ->
-                    file:change_time(OutDir, EbinDate),
+                    case EbinDate of 
+                        0 -> file:change_time(OutDir, lists:min([ file:last_modified(File) || File <- Files ]));
+                        _ -> file:change_time(OutDir, EbinDate)
+                    end,
                     io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
                     throw({error, failed})
             end;
@@ -163,7 +166,7 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
 
 is_newer(Files, Time) ->
     lists:any(fun(FileTime) ->
-                      FileTime > Time
+                      FileTime >= Time
               end, [ filelib:last_modified(File) || File <- Files ]).
 
 ex_opts(Config) ->
