@@ -156,7 +156,7 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                      Reason,
                      File, Line} ->
                     case EbinDate of 
-                        0 -> file:change_time(OutDir, lists:min([ file:last_modified(File) || File <- Files ]));
+                        0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(File) || File <- Files ]));
                         _ -> file:change_time(OutDir, EbinDate)
                     end,
                     io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
@@ -171,7 +171,7 @@ is_newer(Files, Time) ->
               end, [ filelib:last_modified(File) || File <- Files ]).
 
 ex_opts(Config) ->
-    rebar_config:get_local(Config, ex_opts, [{ignore_module_conflict, true}]).
+    orddict:from_list(rebar_config:get_local(Config, ex_opts, [{ignore_module_conflict, true}])).
 
 gather_src([], Srcs) ->
     Srcs;
