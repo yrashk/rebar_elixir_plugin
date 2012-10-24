@@ -42,7 +42,7 @@
 %%
 %% * ex_first_files - First elixir files to compile
 %% * elixir_opts - Erlang list of elixir compiler options
-%%                 
+%%
 %%                 For example, {elixir_opts, [{ignore_module_conflict, false}]}
 %%
 
@@ -100,33 +100,30 @@ dotex_compile(Config, OutDir, MoreSources) ->
             SrcDirs = src_dirs(proplists:append_values(src_dirs, ExOpts)),
             RestExs  = [Source || Source <- gather_src(SrcDirs, []) ++ MoreSources,
                                   not lists:member(Source, FirstExs)],
-            
+
             %% Make sure that ebin/ exists and is on the path
             OutDirExists = filelib:is_dir(OutDir),
 
             CurrPath = code:get_path(),
-            
+
             case OutDirExists of
-                true -> true = code:add_path(filename:absname(OutDir));
-                false -> ok
+                true -> ok;
+                false -> ok = file:make_dir(OutDir)
             end,
 
-            EbinDate =
-            case OutDirExists of
-                true -> 
-                    {ok, Files} = file:list_dir(OutDir),
-                    Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
-                    case Dates of
-                        [] -> 0;
-                        _ ->
-                            lists:max(Dates)
-                    end;
-                false -> 0
+            true = code:add_path(filename:absname(OutDir)),
+
+            {ok, Files} = file:list_dir(OutDir),
+            Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
+
+            EbinDate = case Dates of
+                [] -> 0;
+                _ -> lists:max(Dates)
             end,
 
             compile(FirstExs, ExOpts, OutDir, EbinDate),
             compile(RestExs, ExOpts, OutDir, EbinDate),
-            
+
             true = code:set_path(CurrPath),
             ok;
         false ->
@@ -140,22 +137,22 @@ dotex_compile(Config, OutDir, MoreSources) ->
 compile(Exs, ExOpts, OutDir, EbinDate) ->
     case is_newer(Exs, EbinDate) of
         true ->
-            '__MAIN__-Code':compiler_options(orddict:from_list(ExOpts)),
+            'Elixir-Code':compiler_options(orddict:from_list(ExOpts)),
             Files = [ list_to_binary(F) || F <- Exs],
-            try 
-                '__MAIN__-Elixir-ParallelCompiler':
+            try
+                'Elixir-Kernel-ParallelCompiler':
                     files_to_path(Files,
-                                  list_to_binary(OutDir), 
-                                  fun(F) -> 
+                                  list_to_binary(OutDir),
+                                  fun(F) ->
                                           io:format("Compiled ~s~n",[F])
                                           end),
                 file:change_time(OutDir, erlang:localtime()),
                 ok
-            catch _:{'__MAIN__-CompileError',
+            catch _:{'Elixir-CompileError',
                      '__exception__',
                      Reason,
                      File, Line} ->
-                    case EbinDate of 
+                    case EbinDate of
                         0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(F) || F <- Files ]));
                         _ -> file:change_time(OutDir, EbinDate)
                     end,
