@@ -1,6 +1,7 @@
 ## rebar_elixir_plugin
 
-This plugin allows you to compile Elixir files in your Erlang projects using Rebar.
+This plugin allows you to compile Elixir files in your Erlang projects using Rebar
+and Mix applications under rebar applications tree.
 
 ## Installation
 
@@ -10,7 +11,7 @@ To install this plugin, you need to add it as a dependency to your rebar applica
              {git, "git://github.com/yrashk/rebar_elixir_plugin"}}]}.
 
     %% Let rebar know about the new plugins
-    {plugins, [rebar_elixir_compiler, rebar_exunit] }.
+    {plugins, [rebar_mix_compiler, rebar_elixir_compiler, rebar_exunit] }.
 
 This plugin depends on Elixir too, so you need to add it as a rebar dependency:
 
