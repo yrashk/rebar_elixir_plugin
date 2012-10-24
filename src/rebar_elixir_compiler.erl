@@ -156,7 +156,7 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                      Reason,
                      File, Line} ->
                     case EbinDate of 
-                        0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(File) || File <- Files ]));
+                        0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(F) || F <- Files ]));
                         _ -> file:change_time(OutDir, EbinDate)
                     end,
                     io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
