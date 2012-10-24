@@ -148,10 +148,9 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                                           end),
                 file:change_time(OutDir, erlang:localtime()),
                 ok
-            catch _:{'Elixir-CompileError',
+            catch _:{_,
                      '__exception__',
-                     Reason,
-                     File, Line} ->
+                     File, Line, Reason} ->
                     case EbinDate of
                         0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(F) || F <- Files ]));
                         _ -> file:change_time(OutDir, EbinDate)
