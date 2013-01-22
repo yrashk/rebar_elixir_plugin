@@ -140,10 +140,10 @@ dotex_compile(Config, OutDir, MoreSources) ->
 compile(Exs, ExOpts, OutDir, EbinDate) ->
     case is_newer(Exs, EbinDate) of
         true ->
-            '__MAIN__-Code':compiler_options(orddict:from_list(ExOpts)),
+            'Elixir-Code':compiler_options(orddict:from_list(ExOpts)),
             Files = [ list_to_binary(F) || F <- Exs],
             try 
-                '__MAIN__-Elixir-ParallelCompiler':
+                'Elixir-Kernel-ParallelCompiler':
                     files_to_path(Files,
                                   list_to_binary(OutDir), 
                                   fun(F) -> 
@@ -151,7 +151,7 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
                                           end),
                 file:change_time(OutDir, erlang:localtime()),
                 ok
-            catch _:{'__MAIN__-CompileError',
+            catch _:{'Elixir-CompileError',
                      '__exception__',
                      Reason,
                      File, Line} ->
