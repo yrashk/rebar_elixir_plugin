@@ -12,7 +12,7 @@ To install this plugin, you need to add it as a dependency to your rebar applica
     %% Let rebar know about the new plugins
     {plugins, [rebar_elixir_compiler, rebar_exunit] }.
 
-This plugin depends on Elixir too, so you need to add it as a rebar dependency too:
+This plugin depends on Elixir too, so you need to add it as a rebar dependency:
 
     {deps, [{ elixir, "0.8.*",
              {git, "git://github.com/elixir-lang/elixir"}}]}.
