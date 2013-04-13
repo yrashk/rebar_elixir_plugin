@@ -20,7 +20,7 @@ This plugin depends on Elixir too, so you need to add it as a rebar dependency:
 Elixir is structured similarly to Erlang's OTP. It is divided into applications that are placed inside the `lib` directory, as seen on its [source code repository](https://github.com/elixir-lang/elixir). We need to explicitly tell rebar so:
 
     {lib_dirs, [
-      "deps/elixir/lib",
+      "deps/elixir/lib"
     ]}.
 
 This should be all.
