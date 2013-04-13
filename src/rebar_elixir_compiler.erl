@@ -102,26 +102,18 @@ dotex_compile(Config, OutDir, MoreSources) ->
                                   not lists:member(Source, FirstExs)],
             
             %% Make sure that ebin/ exists and is on the path
-            OutDirExists = filelib:is_dir(OutDir),
-
+            filelib:ensure_dir(filename:join(OutDir, ".")),
             CurrPath = code:get_path(),
-            
-            case OutDirExists of
-                true -> true = code:add_path(filename:absname(OutDir));
-                false -> ok
-            end,
+            code:add_path(filename:absname(OutDir)),
 
-            EbinDate =
-            case OutDirExists of
-                true -> 
-                    {ok, Files} = file:list_dir(OutDir),
-                    Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
-                    case Dates of
-                        [] -> 0;
-                        _ ->
-                            lists:max(Dates)
-                    end;
-                false -> 0
+            EbinDate = begin
+              {ok, Files} = file:list_dir(OutDir),
+              Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
+              case Dates of
+                  [] -> 0;
+                  _ ->
+                      lists:max(Dates)
+              end
             end,
 
             compile(FirstExs, ExOpts, OutDir, EbinDate),
@@ -130,7 +122,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
             true = code:set_path(CurrPath),
             ok;
         false ->
-            rebar_log:log(info, "No Elixir compiler found~n", [])
+            rebar_log:log(error, "No Elixir compiler found~n", [])
     end.
 
 
@@ -142,26 +134,14 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
         true ->
             'Elixir-Code':compiler_options(orddict:from_list(ExOpts)),
             Files = [ list_to_binary(F) || F <- Exs],
-            try 
-                'Elixir-Kernel-ParallelCompiler':
-                    files_to_path(Files,
-                                  list_to_binary(OutDir), 
-                                  fun(F) -> 
-                                          io:format("Compiled ~s~n",[F])
-                                          end),
-                file:change_time(OutDir, erlang:localtime()),
-                ok
-            catch _:{'Elixir-CompileError',
-                     '__exception__',
-                     Reason,
-                     File, Line} ->
-                    case EbinDate of 
-                        0 -> file:change_time(OutDir, lists:min([ filelib:last_modified(File) || File <- Files ]));
-                        _ -> file:change_time(OutDir, EbinDate)
-                    end,
-                    io:format("Compile error in ~s:~w~n ~ts~n~n",[File, Line, Reason]),
-                    throw({error, failed})
-            end;
+            'Elixir-Kernel-ParallelCompiler':
+                files_to_path(Files,
+                              list_to_binary(OutDir), 
+                              fun(F) -> 
+                                      io:format("Compiled ~s~n",[F])
+                              end),
+            file:change_time(OutDir, erlang:localtime()),
+            ok;
         false -> ok
     end.
 
