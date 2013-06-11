@@ -14,7 +14,7 @@ To install this plugin, you need to add it as a dependency to your rebar applica
 
 This plugin depends on Elixir too, so you need to add it as a rebar dependency:
 
-    {deps, [{ elixir, "0.8.*",
+    {deps, [{ elixir, "0.9.*",
              {git, "git://github.com/elixir-lang/elixir"}}]}.
 
 Elixir is structured similarly to Erlang's OTP. It is divided into applications that are placed inside the `lib` directory, as seen on its [source code repository](https://github.com/elixir-lang/elixir). We need to explicitly tell rebar so:

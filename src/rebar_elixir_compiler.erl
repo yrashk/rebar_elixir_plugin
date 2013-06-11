@@ -108,7 +108,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
 
             EbinDate = begin
               {ok, Files} = file:list_dir(OutDir),
-              Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, filename:extension(F) /= ".app" ],
+              Dates = [ filelib:last_modified(filename:join([OutDir, F])) || F <- Files, case F of "Elixir." ++ _ -> true; _ -> false end ],
               case Dates of
                   [] -> 0;
                   _ ->
@@ -132,9 +132,9 @@ dotex_compile(Config, OutDir, MoreSources) ->
 compile(Exs, ExOpts, OutDir, EbinDate) ->
     case is_newer(Exs, EbinDate) of
         true ->
-            'Elixir-Code':compiler_options(orddict:from_list(ExOpts)),
+            'Elixir.Code':compiler_options(orddict:from_list(ExOpts)),
             Files = [ list_to_binary(F) || F <- Exs],
-            'Elixir-Kernel-ParallelCompiler':
+            'Elixir.Kernel.ParallelCompiler':
                 files_to_path(Files,
                               list_to_binary(OutDir), 
                               fun(F) -> 
