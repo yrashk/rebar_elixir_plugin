@@ -66,7 +66,7 @@ ebin_dir() ->
 
 perform_exunit(_Config, Files) ->
     case whereis(exunit_server) of 
-      undefined -> 'Eliir.ExUnit':start([]);
+      undefined -> 'Elixir.ExUnit':start([]);
       _ -> ok
     end,
     [ 'Elixir.Code':require_file(list_to_binary(File)) || File <- Files ],
