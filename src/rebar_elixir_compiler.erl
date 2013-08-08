@@ -42,7 +42,7 @@
 %%
 %% * ex_first_files - First elixir files to compile
 %% * elixir_opts - Erlang list of elixir compiler options
-%%                 
+%%
 %%                 For example, {elixir_opts, [{ignore_module_conflict, false}]}
 %%
 
@@ -100,7 +100,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
             SrcDirs = src_dirs(proplists:append_values(src_dirs, ExOpts)),
             RestExs  = [Source || Source <- gather_src(SrcDirs, []) ++ MoreSources,
                                   not lists:member(Source, FirstExs)],
-            
+
             %% Make sure that ebin/ exists and is on the path
             filelib:ensure_dir(filename:join(OutDir, ".")),
             CurrPath = code:get_path(),
@@ -118,7 +118,7 @@ dotex_compile(Config, OutDir, MoreSources) ->
 
             compile(FirstExs, ExOpts, OutDir, EbinDate),
             compile(RestExs, ExOpts, OutDir, EbinDate),
-            
+
             true = code:set_path(CurrPath),
             ok;
         false ->
@@ -136,10 +136,10 @@ compile(Exs, ExOpts, OutDir, EbinDate) ->
             Files = [ list_to_binary(F) || F <- Exs],
             'Elixir.Kernel.ParallelCompiler':
                 files_to_path(Files,
-                              list_to_binary(OutDir), 
-                              fun(F) -> 
+                              list_to_binary(OutDir),
+                              [{each_file, fun(F) ->
                                       io:format("Compiled ~s~n",[F])
-                              end),
+                              end}]),
             file:change_time(OutDir, erlang:localtime()),
             ok;
         false -> ok
