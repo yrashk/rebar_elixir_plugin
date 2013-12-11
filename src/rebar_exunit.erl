@@ -44,9 +44,17 @@ exunit(Config, _AppFile) ->
     Loaded = (App == ok orelse App == {error, {already_loaded, elixir}}),
     case Loaded of
         true ->
-	  application:start(elixir),
+          application:start(elixir),
+          Suite =
+          %check if rebar_config exports get_global/3 -- changed between rebar 2.0.0 and 2.1.0
+          case lists:keymember(3,2,proplists:lookup_all(get_global,rebar_config:module_info(exports))) of
+            true ->
+              rebar_config:get_global(Config,suite, undefined);
+            false ->
+              rebar_config:get_global(suite, undefined)
+          end,
           TestExs = 
-          case rebar_config:get_global(suite, undefined) of
+          case Suite of
             undefined -> rebar_utils:find_files("test", ".*\\.exs\$");
             Suite -> [Suite]
           end,
