@@ -26,8 +26,7 @@
 %% -------------------------------------------------------------------
 -module(rebar_elixir_compiler).
 
--export([compile/2,
-         post_compile/2,
+-export([pre_compile/2,
          clean/2,
          pre_eunit/2]).
 
@@ -46,23 +45,9 @@
 %%                 For example, {elixir_opts, [{ignore_module_conflict, false}]}
 %%
 
--spec compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
-compile(Config, _AppFile) ->
+-spec pre_compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
+pre_compile(Config, _AppFile) ->
     dotex_compile(Config, "ebin").
-
--spec post_compile(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
-post_compile(_, undefined) -> ok;
-post_compile(Config, AppFile) ->
-    case rebar_app_utils:is_app_src(AppFile) of
-        true ->
-            ActualAppFile = rebar_app_utils:app_src_to_app(AppFile),
-            file:delete(ActualAppFile),
-            erase({app_file, ActualAppFile}),
-            rebar_otp_app:compile(Config, AppFile);
-        false ->
-            ok
-    end.
-
 
 -spec clean(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
 clean(_Config, _AppFile) ->
@@ -70,7 +55,6 @@ clean(_Config, _AppFile) ->
     rebar_file_utils:delete_each(BeamFiles),
     lists:foreach(fun(Dir) -> delete_dir(Dir, dirs(Dir)) end, dirs("ebin")),
     ok.
-
 
 -spec pre_eunit(Config::rebar_config:config(), AppFile::file:filename()) -> 'ok'.
 pre_eunit(Config, _AppFIle) ->
