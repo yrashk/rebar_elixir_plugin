@@ -75,7 +75,13 @@ dotex_compile(Config, OutDir, MoreSources) ->
              (code:ensure_loaded(elixir) == {module, elixir}),
     case Loaded of
         true ->
-            application:start(elixir),
+            case lists:member({ensure_all_started,1},
+                              application:module_info(exports)) of
+                true ->
+                    {ok,_} = application:ensure_all_started(elixir);
+                _ ->
+                    ok = application:start(elixir)
+            end,
             FirstExs = rebar_config:get_local(Config, ex_first_files, []),
             ExOpts = ex_opts(Config),
             %% Support the src_dirs option allowing multiple directories to
