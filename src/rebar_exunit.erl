@@ -78,4 +78,8 @@ perform_exunit(_Config, Files) ->
       _ -> ok
     end,
     [ 'Elixir.Code':require_file(list_to_binary(File)) || File <- Files ],
-    'Elixir.ExUnit':run().
+    Result = 'Elixir.ExUnit':run(),
+    case maps:get(failures, Result) of
+      0 -> ok;
+      F -> rebar_utils:abort("~p tests failed.~n", [F])
+    end.
