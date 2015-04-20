@@ -81,5 +81,5 @@ perform_exunit(_Config, Files) ->
     Result = 'Elixir.ExUnit':run(),
     case maps:get(failures, Result) of
       0 -> ok;
-      F -> rebar_utils:abort("~p or more tests failed.~n", [F])
+      F -> rebar_utils:abort("~p tests failed.~n", [F])
     end.
