@@ -28,6 +28,10 @@
 %% <ul>
 %%   <li>suite="foo"" - runs test/foo_tests.exs</li>
 %% </ul>
+%% The following Local options are supported:
+%% <ul>
+%%   <li>{src_dirs, [dir, ...]} - add dir to the path</li>
+%% </ul>
 %% -------------------------------------------------------------------
 -module(rebar_exunit).
 
@@ -45,18 +49,24 @@ exunit(Config, _AppFile) ->
     case Loaded of
         true ->
           application:start(elixir),
-          Suite =
+          {Suite, SrcDirs} =
           %check if rebar_config exports get_global/3 -- changed between rebar 2.0.0 and 2.1.0
           case lists:keymember(3,2,proplists:lookup_all(get_global,rebar_config:module_info(exports))) of
             true ->
-              rebar_config:get_global(Config,suite, undefined);
+              {rebar_config:get_global(Config, suite, undefined),
+               rebar_config:get(Config, src_dirs, undefined)};
             false ->
-              rebar_config:get_global(suite, undefined)
+              {rebar_config:get_global(suite, undefined),
+               rebar_config:get(src_dirs, undefined)}
           end,
           TestExs = 
           case Suite of
             undefined -> rebar_utils:find_files("test", ".*\\.exs\$");
             Suite -> [Suite]
+          end,
+          case SrcDirs of
+              undefined -> ok;
+              _ -> [code:add_pathz(Path) || Path <- SrcDirs, is_list(Path)]
           end,
           perform_exunit(Config, TestExs);
         false ->
